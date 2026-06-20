@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/attendance_service.dart';
 import 'staff_detail_screen.dart';
+import '../utils/smooth_transitions.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -156,7 +157,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               style: TextStyle(color: isOnline ? Colors.black : Colors.black26, fontSize: 12, fontWeight: FontWeight.w600),
             ),
             trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.black26),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StaffDetailScreen(staff: staff))),
+            onTap: () => Navigator.push(
+              context,
+              SmoothPageRoute(child: StaffDetailScreen(staff: staff)),
+            ),
           ),
         );
       },

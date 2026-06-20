@@ -141,7 +141,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
   Widget _buildAnalyticsSummary() {
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    
+
     final monthRecords = _history.where((r) {
       final checkIn = DateTime.parse(r['check_in']);
       return checkIn.isAfter(firstDayOfMonth) || checkIn.isAtSameMomentAs(firstDayOfMonth);
@@ -149,7 +149,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
 
     double totalHours = 0;
     Set<String> activeDays = {};
-    
+
     for (var r in monthRecords) {
       totalHours += _calculateHours(r);
       activeDays.add(r['check_in'].substring(0, 10)); // YYYY-MM-DD
@@ -157,29 +157,32 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
 
     final avgHours = activeDays.isEmpty ? 0.0 : totalHours / activeDays.length;
 
-    return Row(
-      children: [
-        _buildSummaryCard(
-          'Active Days',
-          activeDays.length.toString(),
-          'Days this month',
-          Icons.calendar_today_rounded,
-        ),
-        const SizedBox(width: 16),
-        _buildSummaryCard(
-          'Total Hours',
-          totalHours.toStringAsFixed(1),
-          'Hours worked',
-          Icons.timer_outlined,
-        ),
-        const SizedBox(width: 16),
-        _buildSummaryCard(
-          'Avg / Day',
-          avgHours.toStringAsFixed(1),
-          'Average hours',
-          Icons.analytics_outlined,
-        ),
-      ],
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildSummaryCard(
+            'Active Days',
+            activeDays.length.toString(),
+            'Days this month',
+            Icons.calendar_today_rounded,
+          ),
+          const SizedBox(width: 12),
+          _buildSummaryCard(
+            'Total Hours',
+            totalHours.toStringAsFixed(1),
+            'Hours worked',
+            Icons.timer_outlined,
+          ),
+          const SizedBox(width: 12),
+          _buildSummaryCard(
+            'Avg / Day',
+            avgHours.toStringAsFixed(1),
+            'Average hours',
+            Icons.analytics_outlined,
+          ),
+        ],
+      ),
     );
   }
 
@@ -241,7 +244,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Production Staff • Synced',
+            'Employee • Synced',
             style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 9, letterSpacing: 2, fontWeight: FontWeight.w900),
           ),
         ],
@@ -254,7 +257,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
     final dataPoints = List.generate(daysCount, (index) {
       final date = DateTime.now().subtract(Duration(days: index));
       final dateStr = DateFormat('yyyy-MM-dd').format(date);
-      
+
       final records = _history.where((r) => r['check_in'].startsWith(dateStr));
       double totalHours = 0;
       for (var r in records) {
@@ -302,7 +305,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= data.length) return const SizedBox.shrink();
-                
+
                 if (isMonthly) {
                   if (index % 7 != 0) return const SizedBox.shrink();
                   return Padding(
