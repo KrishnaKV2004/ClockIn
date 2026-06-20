@@ -38,12 +38,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadInitialData() async {
-    final attendanceService = Provider.of<AttendanceService>(context, listen: false);
-    final data = await attendanceService.getTodayAttendance();
-    setState(() {
-      _todayAttendance = data;
-      _isLoading = false;
-    });
+    try {
+      final attendanceService = Provider.of<AttendanceService>(context, listen: false);
+      final data = await attendanceService.getTodayAttendance();
+      if (mounted) {
+        setState(() {
+          _todayAttendance = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading initial data: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Database Error: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
   }
 
   void _startLocationTracking() {

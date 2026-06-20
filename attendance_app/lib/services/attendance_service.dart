@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_service.dart';
 
@@ -44,16 +45,22 @@ class AttendanceService {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
 
-    final response = await _client
-        .from('attendance')
-        .select()
-        .eq('user_id', user.id)
-        .gte('check_in', startOfDay)
-        .order('check_in', ascending: false)
-        .limit(1)
-        .maybeSingle();
+    try {
+      final response = await _client
+          .from('attendance')
+          .select()
+          .eq('user_id', user.id)
+          .gte('check_in', startOfDay)
+          .order('check_in', ascending: false)
+          .limit(1)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 10));
 
-    return response;
+      return response;
+    } catch (e) {
+      debugPrint('getTodayAttendance error: $e');
+      rethrow;
+    }
   }
 
   Future<List<dynamic>> getAttendanceHistory() async {

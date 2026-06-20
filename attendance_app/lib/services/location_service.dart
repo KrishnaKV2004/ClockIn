@@ -3,8 +3,8 @@ import 'package:latlong2/latlong.dart';
 
 class LocationService {
   // Replace with your office coordinates
-  static const double officeLatitude = 28.6139; // Example: New Delhi
-  static const double officeLongitude = 77.2090;
+  static const double officeLatitude = 30.483667;
+  static const double officeLongitude = 77.131694;
   static const double officeRadiusInMeters = 50.0;
 
   static Future<Position> getCurrentLocation() async {
