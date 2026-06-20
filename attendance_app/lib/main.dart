@@ -38,14 +38,25 @@ class AttendanceApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
-          brightness: Brightness.dark,
+        brightness: Brightness.light,
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF000000),
+          onPrimary: Colors.white,
+          secondary: Color(0xFF64748B),
+          surface: Colors.white,
+          onSurface: Color(0xFF0F172A),
         ),
         textTheme: GoogleFonts.outfitTextTheme(
-          Theme.of(context).textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+          Theme.of(context).textTheme.apply(bodyColor: const Color(0xFF0F172A), displayColor: const Color(0xFF0F172A)),
         ),
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        scaffoldBackgroundColor: const Color(0xFFFFFFFF),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+          centerTitle: true,
+          titleTextStyle: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
+        ),
       ),
       home: const AuthWrapper(),
     );

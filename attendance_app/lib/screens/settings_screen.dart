@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/profile_service.dart';
 import '../services/supabase_service.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -51,12 +52,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: Colors.greenAccent,
+          SnackBar(
+            content: const Text('PROFILE SYNCHRONIZED', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            backgroundColor: Colors.black,
             behavior: SnackBarBehavior.floating,
-            shape: StadiumBorder(),
-            margin: EdgeInsets.only(bottom: 10, left: 32, right: 32),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            margin: const EdgeInsets.all(24),
           ),
         );
       }
@@ -64,11 +65,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.redAccent,
+            content: Text('Error: $e', style: const TextStyle(color: Colors.white)),
+            backgroundColor: Colors.black,
             behavior: SnackBarBehavior.floating,
-            shape: const StadiumBorder(),
-            margin: const EdgeInsets.only(bottom: 10, left: 32, right: 32),
           ),
         );
       }
@@ -80,64 +79,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('SETTINGS', style: TextStyle(letterSpacing: 4, fontSize: 14, fontWeight: FontWeight.w900)),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+          ? const Center(child: CircularProgressIndicator(color: Colors.black))
+          : Padding(
+              padding: const EdgeInsets.all(40.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Profile Information',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    'Update Profile',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Update your personal details',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                  const Text(
+                    'Keep your professional identity up to date',
+                    style: TextStyle(color: Colors.black38, fontSize: 13),
                   ),
-                  const SizedBox(height: 32),
-                  _buildTextField(
+                  const SizedBox(height: 48),
+                  _buildInput(
                     controller: _nameController,
-                    label: 'Full Name',
-                    icon: Icons.person_outline,
+                    hint: 'Full Name',
+                    icon: Icons.person_outline_rounded,
                   ),
                   const SizedBox(height: 24),
-                  _buildTextField(
+                  _buildInput(
                     controller: _emailController,
-                    label: 'Email Address',
-                    icon: Icons.email_outlined,
-                    enabled: false, // Email update is more complex in Supabase (needs confirmation)
+                    hint: 'Email Address',
+                    icon: Icons.alternate_email_rounded,
+                    enabled: false,
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Email cannot be changed directly for security reasons.',
-                    style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                    'Email is managed by administrator',
+                    style: TextStyle(color: Colors.black12, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 48),
+                  const Spacer(),
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 64,
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _saveProfile,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
+                        backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                        elevation: 0,
                       ),
                       child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : const Text(
-                              'Save Changes',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              'SAVE CHANGES',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
                             ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: TextButton(
+                      onPressed: () async {
+                        await SupabaseService.client.auth.signOut();
+                        if (mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            (route) => false,
+                          );
+                        }
+                      },
+                      child: const Text(
+                        'SIGN OUT',
+                        style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2),
+                      ),
                     ),
                   ),
                 ],
@@ -146,28 +164,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildInput({
     required TextEditingController controller,
-    required String label,
+    required String hint,
     required IconData icon,
     bool enabled = true,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
       child: TextField(
         controller: controller,
         enabled: enabled,
-        style: TextStyle(color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.5)),
+        style: TextStyle(
+          color: enabled ? Colors.black : Colors.black26,
+          fontWeight: FontWeight.w600,
+        ),
         decoration: InputDecoration(
           border: InputBorder.none,
-          icon: Icon(icon, color: const Color(0xFF6366F1)),
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.black26, fontSize: 14),
+          icon: Icon(icon, color: Colors.black45, size: 20),
         ),
       ),
     );

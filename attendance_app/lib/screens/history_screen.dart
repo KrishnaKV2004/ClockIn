@@ -16,25 +16,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final attendanceService = Provider.of<AttendanceService>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Attendance History'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('HISTORY', style: TextStyle(letterSpacing: 4, fontSize: 14, fontWeight: FontWeight.w900)),
       ),
       body: FutureBuilder<List<dynamic>>(
         future: attendanceService.getAttendanceHistory(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.black));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No attendance records found.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history_toggle_off_rounded, size: 64, color: Colors.black.withValues(alpha: 0.05)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No activities yet',
+                    style: TextStyle(color: Colors.black26, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
+                ],
+              ),
+            );
           }
 
           final records = snapshot.data!;
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             itemCount: records.length,
             itemBuilder: (context, index) {
               final record = records[index];
@@ -44,45 +55,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   : null;
 
               return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.calendar_today, color: Color(0xFF6366F1), size: 20),
-                    ),
-                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            DateFormat('EEEE, MMM d').format(checkIn),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            DateFormat('EEEE, MMM d').format(checkIn).toUpperCase(),
+                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1, color: Colors.black38),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           Text(
-                            'In: ${DateFormat('hh:mm a').format(checkIn)}${checkOut != null ? ' • Out: ${DateFormat('hh:mm a').format(checkOut)}' : ' • Active'}',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+                            checkOut != null 
+                              ? '${DateFormat('hh:mm a').format(checkIn)} — ${DateFormat('hh:mm a').format(checkOut)}'
+                              : '${DateFormat('hh:mm a').format(checkIn)} — ACTIVE',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
                           ),
                         ],
                       ),
                     ),
                     if (checkOut == null)
-                      const Badge(
-                        label: Text('ACTIVE'),
-                        backgroundColor: Colors.greenAccent,
-                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'LIVE',
+                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                        ),
+                      )
+                    else
+                         const Icon(Icons.check_circle_outline_rounded, color: Colors.black12, size: 20),
                   ],
                 ),
               );
