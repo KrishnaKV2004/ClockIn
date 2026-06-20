@@ -31,32 +31,36 @@ class ClockInAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ClockIn Admin',
+      title: 'Moon Arc Admin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF020617),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF6366F1),
-          secondary: Color(0xFF94A3B8),
-          surface: Color(0xFF0F172A),
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF000000),
+          onPrimary: Colors.white,
+          secondary: Color(0xFF64748B),
+          surface: Colors.white,
+          onSurface: Color(0xFF0F172A),
         ),
         textTheme: GoogleFonts.outfitTextTheme(
-          Theme.of(context).textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+          Theme.of(context).textTheme.apply(bodyColor: const Color(0xFF0F172A), displayColor: const Color(0xFF0F172A)),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.black),
           titleTextStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
+            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
           ),
         ),
         cardTheme: CardThemeData(
-          color: const Color(0xFF0F172A),
+          color: const Color(0xFFF1F5F9),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           elevation: 0,
         ),

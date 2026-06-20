@@ -69,14 +69,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            DateFormat('EEEE, MMM d').format(checkIn).toUpperCase(),
+                            DateFormat('EEEE, MMM d').format(checkIn),
                             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1, color: Colors.black38),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             checkOut != null 
                               ? '${DateFormat('hh:mm a').format(checkIn)} — ${DateFormat('hh:mm a').format(checkOut)}'
-                              : '${DateFormat('hh:mm a').format(checkIn)} — ACTIVE',
+                              : '${DateFormat('hh:mm a').format(checkIn)} — Active',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
                           ),
                         ],
@@ -90,7 +90,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
-                          'LIVE',
+                          'Live',
                           style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
                         ),
                       )

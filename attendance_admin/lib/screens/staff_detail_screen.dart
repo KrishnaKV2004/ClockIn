@@ -44,25 +44,28 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.staff['full_name']?.toUpperCase() ?? 'STAFF DETAIL', style: const TextStyle(fontSize: 14, letterSpacing: 2)),
+        title: const Text('Analytics Portal'),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          ? const Center(child: CircularProgressIndicator(color: Colors.black))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    _buildProfileHeader(),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
+                  _buildAnalyticsSummary(),
+                  const SizedBox(height: 32),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,8 +74,8 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              _selectedRange == ChartRange.week ? 'WEEKLY PRODUCTIVITY (HRS)' : 'MONTHLY PRODUCTIVITY (HRS)',
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white38, letterSpacing: 2),
+                              _selectedRange == ChartRange.week ? 'Weekly Performance' : 'Monthly Performance',
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black26, letterSpacing: 2),
                             ),
                             _buildRangeSelector(),
                           ],
@@ -84,10 +87,10 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                   ),
                   const SizedBox(height: 48),
                   const Text(
-                    'RECENT ACTIVITY LOGS',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white38, letterSpacing: 2),
+                    'Attendance Logs',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black26, letterSpacing: 2),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildHistoryList(),
                 ],
               ),
@@ -99,8 +102,9 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
@@ -119,16 +123,94 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+          color: isSelected ? Colors.black : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white24,
+            color: isSelected ? Colors.white : Colors.black26,
             fontSize: 10,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w900,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsSummary() {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    
+    final monthRecords = _history.where((r) {
+      final checkIn = DateTime.parse(r['check_in']);
+      return checkIn.isAfter(firstDayOfMonth) || checkIn.isAtSameMomentAs(firstDayOfMonth);
+    }).toList();
+
+    double totalHours = 0;
+    Set<String> activeDays = {};
+    
+    for (var r in monthRecords) {
+      totalHours += _calculateHours(r);
+      activeDays.add(r['check_in'].substring(0, 10)); // YYYY-MM-DD
+    }
+
+    final avgHours = activeDays.isEmpty ? 0.0 : totalHours / activeDays.length;
+
+    return Row(
+      children: [
+        _buildSummaryCard(
+          'Active Days',
+          activeDays.length.toString(),
+          'Days this month',
+          Icons.calendar_today_rounded,
+        ),
+        const SizedBox(width: 16),
+        _buildSummaryCard(
+          'Total Hours',
+          totalHours.toStringAsFixed(1),
+          'Hours worked',
+          Icons.timer_outlined,
+        ),
+        const SizedBox(width: 16),
+        _buildSummaryCard(
+          'Avg / Day',
+          avgHours.toStringAsFixed(1),
+          'Average hours',
+          Icons.analytics_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String value, String sub, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: Colors.black26),
+            const SizedBox(height: 16),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.black),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black, letterSpacing: 0.5),
+            ),
+            Text(
+              sub,
+              style: const TextStyle(fontSize: 8, color: Colors.black12, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       ),
     );
@@ -137,42 +219,30 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
   Widget _buildProfileHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [const Color(0xFF6366F1).withValues(alpha: 0.1), Colors.transparent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.black,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.1)),
       ),
-      child: Row(
+      child: Column(
         children: [
           CircleAvatar(
-            radius: 36,
-            backgroundColor: const Color(0xFF6366F1),
+            radius: 40,
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
             child: Text(
               (widget.staff['full_name'] ?? '?')[0].toUpperCase(),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white),
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white),
             ),
           ),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.staff['full_name'] ?? 'Employee',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'MEMBER SINCE ${DateFormat('MMM yyyy').format(DateTime.now()).toUpperCase()}',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+          const SizedBox(height: 24),
+          Text(
+            widget.staff['full_name'] ?? 'Employee',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Production Staff • Synced',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 9, letterSpacing: 2, fontWeight: FontWeight.w900),
           ),
         ],
       ),
@@ -200,7 +270,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               scrollDirection: Axis.horizontal,
               reverse: true,
               child: SizedBox(
-                width: 30 * 40.0, // Enough space for 30 bars
+                width: 30 * 40.0,
                 child: _buildBarChart(dataPoints, isMonthly: true),
               ),
             )
@@ -234,20 +304,18 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                 if (index < 0 || index >= data.length) return const SizedBox.shrink();
                 
                 if (isMonthly) {
-                  // Only show label for every 7 days to avoid clutter
                   if (index % 7 != 0) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text('W${(index / 7).floor() + 1}', style: const TextStyle(color: Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
+                    child: Text('W${(index / 7).floor() + 1}', style: const TextStyle(color: Colors.black26, fontSize: 9, fontWeight: FontWeight.w900)),
                   );
                 } else {
                   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                  // Need to map the current day correctly
                   final date = DateTime.now().subtract(Duration(days: 6 - index));
                   final dayLabel = days[date.weekday - 1];
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(dayLabel, style: const TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: Text(dayLabel, style: const TextStyle(color: Colors.black26, fontSize: 10, fontWeight: FontWeight.w900)),
                   );
                 }
               },
@@ -265,13 +333,13 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
             barRods: [
               BarChartRodData(
                 toY: data[i],
-                color: data[i] > 8 ? const Color(0xFF10B981) : const Color(0xFF6366F1),
-                width: isMonthly ? 10 : 14,
+                color: data[i] > 8 ? Colors.black : Colors.black.withValues(alpha: 0.1),
+                width: isMonthly ? 10 : 16,
                 borderRadius: BorderRadius.circular(4),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 12,
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.black.withValues(alpha: 0.03),
                 ),
               ),
             ],
@@ -283,7 +351,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
 
   Widget _buildHistoryList() {
     if (_history.isEmpty) {
-      return const Text('No recent activity.', style: TextStyle(color: Colors.white24));
+      return const Center(child: Text('No activity records.', style: TextStyle(color: Colors.black26, fontSize: 12)));
     }
 
     return ListView.builder(
@@ -298,11 +366,11 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
           ),
           child: Row(
             children: [
@@ -312,31 +380,31 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                   children: [
                     Text(
                       DateFormat('EEEE, MMM d').format(checkIn),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1, color: Colors.black26),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      '${DateFormat('hh:mm a').format(checkIn)} - ${checkOut != null ? DateFormat('hh:mm a').format(checkOut) : 'ACTIVE'}',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11, fontWeight: FontWeight.bold),
+                      '${DateFormat('hh:mm a').format(checkIn)} - ${checkOut != null ? DateFormat('hh:mm a').format(checkOut) : 'LIVE'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
                     ),
                   ],
                 ),
               ),
               if (checkOut != null)
                 Text(
-                   '${hours.toStringAsFixed(1)} HRS',
-                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF6366F1), fontSize: 13, letterSpacing: 0.5),
+                   '${hours.toStringAsFixed(1)} H',
+                  style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black, fontSize: 14),
                 )
               else
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    color: Colors.black,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
-                    'LIVE',
-                    style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    'Live',
+                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
                   ),
                 ),
             ],

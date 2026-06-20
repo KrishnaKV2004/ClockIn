@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
       if (!isInside) {
         if (mounted) {
-          _showError('OFFICE RADIUS EXCEEDED', 'You are ${_distanceToOffice.toStringAsFixed(0)}m away. Move closer to the office.');
+          _showError('Office Radius Exceeded', 'You are ${_distanceToOffice.toStringAsFixed(0)}m away. Move closer to the office.');
         }
         return;
       }
@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
       await _loadInitialData();
     } catch (e) {
-       if (mounted) _showError('ACCESS DENIED', e.toString());
+       if (mounted) _showError('Access Denied', e.toString());
     } finally {
       if (mounted) setState(() => _isMarkingAttendance = false);
     }
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 _buildFingerprintButton(isCheckedIn),
                 const SizedBox(height: 48),
                 const Text(
-                  'Moon Arc Creations',
+                  'ClockIn',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
@@ -234,12 +234,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         children: [
           const Text(
-            'WELCOME BACK',
+            'Welcome Back',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 3, color: Colors.black26),
           ),
           const SizedBox(height: 12),
           Text(
-            _fullName?.toUpperCase() ?? 'EXPLORER',
+            _fullName ?? 'Explorer',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: -0.5),
           ),
@@ -305,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        isCheckedIn ? 'CHECK OUT' : 'CHECK IN',
+                        isCheckedIn ? 'Check Out' : 'Check In',
                         style: TextStyle(
                           color: isCheckedIn ? Colors.black26 : Colors.white70,
                           fontSize: 10,
@@ -331,11 +331,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildInfoItem('LAST IN', checkInTime),
+          _buildInfoItem('Last In', checkInTime),
           Container(width: 1, height: 30, color: Colors.black12),
-          _buildInfoItem('PROXIMITY', '${_distanceToOffice.toStringAsFixed(0)}M'),
+          _buildInfoItem('Proximity', '${_distanceToOffice.toStringAsFixed(0)}M'),
           Container(width: 1, height: 30, color: Colors.black12),
-          _buildInfoItem('STATUS', _todayAttendance == null ? 'OFF' : 'LIVE'),
+          _buildInfoItem('Status', _todayAttendance == null ? 'Off' : 'Live'),
         ],
       ),
     );

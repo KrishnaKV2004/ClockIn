@@ -113,4 +113,59 @@ class AttendanceService with ChangeNotifier {
       return [];
     }
   }
+
+  Future<void> addStaff(String name, String email, String password) async {
+    try {
+      // 1. Create a temporary client with no-op storage to avoid logging out the admin
+      // and to prevent the PKCE 'asyncStorage != null' error.
+      final tempClient = SupabaseClient(
+        SupabaseService.supabaseUrl,
+        SupabaseService.supabaseKey,
+        authOptions: AuthClientOptions(
+          pkceAsyncStorage: _NoopStorage(),
+        ),
+      );
+      
+      // 2. Sign up the user
+      final AuthResponse res = await tempClient.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'full_name': name,
+        },
+      );
+
+      final user = res.user;
+      if (user == null) throw Exception('Failed to create user');
+
+      // 3. Insert into profiles table
+      await _client.from('profiles').upsert({
+        'id': user.id,
+        'full_name': name,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error adding staff: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> removeStaff(String userId) async {
+    // First remove attendance records
+    await SupabaseService.client.from('attendance').delete().eq('user_id', userId);
+    // Then remove profile
+    await SupabaseService.client.from('profiles').delete().eq('id', userId);
+  }
+}
+
+// Simple no-op storage for temporary Supabase clients
+class _NoopStorage extends GotrueAsyncStorage {
+  @override
+  Future<void> removeItem({required String key}) async {}
+  @override
+  Future<String?> getItem({required String key}) async => null;
+  @override
+  Future<void> setItem({required String key, required String value}) async {}
 }

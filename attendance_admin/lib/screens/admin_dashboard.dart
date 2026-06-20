@@ -28,7 +28,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final staff = await service.getAllStaff();
     final allHistory = await service.getAllAttendanceHistory();
     
-    // Filter for today's active sessions (checked in but not out)
     final now = DateTime.now();
     final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
     
@@ -47,56 +46,35 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Column(
-          children: [
-            Text(
-              'ADMIN PANEL',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10, letterSpacing: 4, fontWeight: FontWeight.bold),
-            ),
-            const Text('DASHBOARD'),
-          ],
-        ),
+        title: const Text('Admin Console'),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh_rounded, size: 20),
-            ),
+          IconButton(
+            onPressed: _loadData,
+            icon: const Icon(Icons.refresh_rounded, size: 24),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          ? const Center(child: CircularProgressIndicator(color: Colors.black))
           : RefreshIndicator(
               onRefresh: _loadData,
-              color: const Color(0xFF6366F1),
+              color: Colors.black,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatsGrid(),
+                    _buildStatsRow(),
                     const SizedBox(height: 48),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'STAFF DIRECTORY',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white38, letterSpacing: 2),
-                        ),
-                        Text(
-                          '${_allStaff.length} TOTAL',
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF6366F1)),
-                        ),
-                      ],
+                    const Text(
+                      'Staff Roster',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black26, letterSpacing: 2),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     _buildStaffList(),
                   ],
                 ),
@@ -105,80 +83,44 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsRow() {
     return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            'TOTAL STAFF',
-            _allStaff.length.toString(),
-            Icons.group_outlined,
-            const Color(0xFF6366F1),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
-            'ACTIVE NOW',
-            _todayAttendance.length.toString(),
-            Icons.radio_button_checked,
-            const Color(0xFF10B981),
-          ),
-        ),
-      ],
+        children: [
+          _buildStatCard('Headcount', _allStaff.length.toString(), Icons.people_alt_rounded),
+          const SizedBox(width: 16),
+          _buildStatCard('Online Now', _todayAttendance.length.toString(), Icons.radar_rounded, isAccent: true),
+        ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
+  Widget _buildStatCard(String label, String value, IconData icon, {bool isAccent = false}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isAccent ? Colors.black : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: isAccent ? Colors.white : Colors.black, size: 20),
+            const SizedBox(height: 20),
+            Text(
+              value,
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: isAccent ? Colors.white : Colors.black),
             ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1),
-          ),
-          Text(
-            title,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
-          ),
-        ],
+            Text(
+              label,
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: isAccent ? Colors.white38 : Colors.black26, letterSpacing: 1),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStaffList() {
-    if (_allStaff.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.only(top: 40),
-          child: Text('No staff records.', style: TextStyle(color: Colors.white24)),
-        ),
-      );
-    }
-
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -188,64 +130,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final bool isOnline = _todayAttendance.any((a) => a['user_id'] == staff['id']);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => StaffDetailScreen(staff: staff),
-                ),
-              );
-            },
-            leading: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: isOnline ? const Color(0xFF6366F1).withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
-                  child: Text(
-                    (staff['full_name'] ?? '?')[0].toUpperCase(),
-                    style: TextStyle(color: isOnline ? const Color(0xFF6366F1) : Colors.white38, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                if (isOnline)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF020617), width: 2),
-                      ),
-                    ),
-                  ),
-              ],
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              radius: 24,
+              backgroundColor: isOnline ? Colors.black : Colors.black.withValues(alpha: 0.05),
+              child: Text(
+                (staff['full_name'] ?? '?')[0].toUpperCase(),
+                style: TextStyle(color: isOnline ? Colors.white : Colors.black26, fontWeight: FontWeight.bold),
+              ),
             ),
             title: Text(
-              staff['full_name'] ?? 'Incognito',
+              staff['full_name'] ?? 'Employee',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             subtitle: Text(
-              isOnline ? 'Active Session' : 'Currently Offline',
-              style: TextStyle(color: isOnline ? const Color(0xFF10B981) : Colors.white38, fontSize: 12, fontWeight: FontWeight.w500),
+              isOnline ? 'Active Now' : 'Offline',
+              style: TextStyle(color: isOnline ? Colors.black : Colors.black26, fontSize: 12, fontWeight: FontWeight.w600),
             ),
-            trailing: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 14),
-            ),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.black26),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StaffDetailScreen(staff: staff))),
           ),
         );
       },

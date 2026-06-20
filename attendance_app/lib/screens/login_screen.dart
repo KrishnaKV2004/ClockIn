@@ -58,97 +58,104 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Spacer(),
-              // Minimal Logo
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 30,
-                      offset: const Offset(0, 15),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.blur_on_rounded, color: Colors.white, size: 40),
-              ),
-              const SizedBox(height: 48),
-              const Text(
-                'MOON ARC CREATIONS',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 4,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'High-Fidelity Suite • Production V2',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black12,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              _buildInput(
-                controller: _emailController,
-                hint: 'Email Address',
-                icon: Icons.alternate_email_rounded,
-              ),
-              const SizedBox(height: 20),
-              _buildInput(
-                controller: _passwordController,
-                hint: 'Password',
-                icon: Icons.lock_outline_rounded,
-                isPassword: true,
-              ),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                height: 64,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text(
-                          'CONTINUE',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 60),
+                  // Minimal Logo
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 30,
+                          offset: const Offset(0, 15),
                         ),
-                ),
+                      ],
+                    ),
+                    child: const Icon(Icons.blur_on_rounded, color: Colors.white, size: 40),
+                  ),
+                  const SizedBox(height: 48),
+                  const Text(
+                    'Moon Arc Creations',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Employee Monitoring',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Spacer(),
+                  _buildInput(
+                    controller: _emailController,
+                    hint: 'Email Address',
+                    icon: Icons.alternate_email_rounded,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInput(
+                    controller: _passwordController,
+                    hint: 'Password',
+                    icon: Icons.lock_outline_rounded,
+                    isPassword: true,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 64,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text(
+                              'Continue',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
+                            ),
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'V 1.0.0',
+                    style: TextStyle(fontSize: 10, color: Colors.black12, fontWeight: FontWeight.bold, letterSpacing: 2),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 40),
-              const Text(
-                'V 2.0.1 PRO',
-                style: TextStyle(fontSize: 10, color: Colors.black12, fontWeight: FontWeight.bold, letterSpacing: 2),
-              ),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),
