@@ -35,10 +35,24 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
   }
 
   double _calculateHours(dynamic record) {
-    if (record['check_out'] == null) return 0;
-    final start = DateTime.parse(record['check_in']);
-    final end = DateTime.parse(record['check_out']);
-    return end.difference(start).inMinutes / 60.0;
+    try {
+      final start = DateTime.parse(record['check_in']).toUtc();
+      final end = record['check_out'] != null
+          ? DateTime.parse(record['check_out']).toUtc()
+          : DateTime.now().toUtc();
+
+      final diff = end.difference(start).inSeconds;
+      return (diff < 0 ? 0 : diff) / 3600.0;
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+  String _formatValue(double hours) {
+    if (hours <= 0.01) return '0';
+    final totalMinutes = (hours * 60).round();
+    if (totalMinutes < 60) return '${totalMinutes}m';
+    return '${hours.toStringAsFixed(1)}h';
   }
 
   @override
@@ -170,14 +184,14 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           const SizedBox(width: 12),
           _buildSummaryCard(
             'Total Hours',
-            totalHours.toStringAsFixed(1),
+            _formatValue(totalHours),
             'Hours worked',
             Icons.timer_outlined,
           ),
           const SizedBox(width: 12),
           _buildSummaryCard(
             'Avg / Day',
-            avgHours.toStringAsFixed(1),
+            _formatValue(avgHours),
             'Average hours',
             Icons.analytics_outlined,
           ),
@@ -267,17 +281,115 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
     }).reversed.toList();
 
     return SizedBox(
-      height: 180,
+      width: double.infinity,
       child: _selectedRange == ChartRange.month
-          ? SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              child: SizedBox(
-                width: 30 * 40.0,
-                child: _buildBarChart(dataPoints, isMonthly: true),
+          ? _buildHeatmap()
+          : SizedBox(height: 180, child: _buildBarChart(dataPoints, isMonthly: false)),
+    );
+  }
+
+  Widget _buildHeatmap() {
+    final now = DateTime.now();
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+    final daysInMonth = lastDayOfMonth.day;
+    
+    const rows = 3;
+    final cols = (daysInMonth / rows).ceil();
+
+    return Column(
+      children: [
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top Labels (Day numbers)
+              Padding(
+                padding: const EdgeInsets.only(left: 2.0), // Align with first circle
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(cols, (colIdx) {
+                    final dayLabel = (colIdx * rows) + 1;
+                    return SizedBox(
+                      width: 24, // 14 dot + 10 padding
+                      child: Text(
+                        dayLabel <= daysInMonth ? dayLabel.toString() : '',
+                        style: const TextStyle(color: Colors.black38, fontSize: 8, fontWeight: FontWeight.w900),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }),
+                ),
               ),
-            )
-          : _buildBarChart(dataPoints, isMonthly: false),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(cols, (colIdx) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                    child: Column(
+                      children: List.generate(rows, (rowIdx) {
+                        final dayNumber = (colIdx * rows) + rowIdx + 1;
+                        
+                        if (dayNumber > daysInMonth) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 5.0),
+                            child: SizedBox(width: 14, height: 14),
+                          );
+                        }
+
+                        final date = DateTime(now.year, now.month, dayNumber);
+                        final dateStr = DateFormat('yyyy-MM-dd').format(date);
+                        final hasAttended = _history.any((r) => r['check_in'].startsWith(dateStr));
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: hasAttended ? Colors.black : const Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildLegendItem('Absent', false),
+            const SizedBox(width: 24),
+            _buildLegendItem('Present', true),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String label, bool isPresent) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isPresent ? Colors.black : const Color(0xFFF1F5F9),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.black54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+        ),
+      ],
     );
   }
 
@@ -285,13 +397,15 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceEvenly,
-        maxY: 12,
+        maxY: (data.isNotEmpty && data.reduce((a, b) => a > b ? a : b) > 12)
+              ? data.reduce((a, b) => a > b ? a : b) + 2
+              : 12,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             tooltipRoundedRadius: 8,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                '${rod.toY.toStringAsFixed(1)} hrs',
+                _formatValue(rod.toY),
                 const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               );
             },
@@ -335,13 +449,13 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
             x: i,
             barRods: [
               BarChartRodData(
-                toY: data[i],
+                toY: data[i] < 0 ? 0 : data[i],
                 color: data[i] > 8 ? Colors.black : Colors.black.withValues(alpha: 0.1),
                 width: isMonthly ? 10 : 16,
                 borderRadius: BorderRadius.circular(4),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
-                  toY: 12,
+                  toY: data[i] > 12 ? data[i] + 2 : 12, // Adaptive background
                   color: Colors.black.withValues(alpha: 0.03),
                 ),
               ),

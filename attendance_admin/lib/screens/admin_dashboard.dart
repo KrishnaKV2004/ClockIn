@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/attendance_service.dart';
@@ -15,11 +16,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
   List<dynamic> _allStaff = [];
   List<dynamic> _todayAttendance = [];
   bool _isLoading = true;
+  StreamSubscription? _attendanceSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _setupRealtime();
+  }
+
+  @override
+  void dispose() {
+    _attendanceSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _setupRealtime() {
+    final service = Provider.of<AttendanceService>(context, listen: false);
+    _attendanceSubscription = service.attendanceStream.listen((data) {
+      if (mounted) {
+        debugPrint('REALTIME: Received ${data.length} records');
+        setState(() {
+          // Update online status from stream
+          _todayAttendance = data.where((record) => record['check_out'] == null).toList();
+          debugPrint('REALTIME: Active sessions: ${_todayAttendance.length}');
+        });
+      }
+    });
   }
 
   Future<void> _loadData() async {
@@ -29,13 +52,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final staff = await service.getAllStaff();
     final allHistory = await service.getAllAttendanceHistory();
     
-    final now = DateTime.now();
-    final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    
+    debugPrint('All History Count: ${allHistory.length}');
+    for (var rec in allHistory) {
+      debugPrint('Record: User: ${rec['user_id']}, CheckOut: ${rec['check_out']}');
+    }
+
+    // Simple logic: If check_out is null, the person is active/online.
     final today = allHistory.where((record) {
-      final checkIn = record['check_in'] as String;
-      return checkIn.startsWith(todayStr) && record['check_out'] == null;
+      return record['check_out'] == null;
     }).toList();
+    
+    debugPrint('Filtering found ${today.length} active sessions');
 
     setState(() {
       _allStaff = staff;
@@ -89,7 +116,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         children: [
           _buildStatCard('Headcount', _allStaff.length.toString(), Icons.people_alt_rounded),
           const SizedBox(width: 16),
-          _buildStatCard('Online Now', _todayAttendance.length.toString(), Icons.radar_rounded, isAccent: true),
+          _buildStatCard('Online Now', _todayAttendance.map((e) => e['user_id']).toSet().length.toString(), Icons.radar_rounded, isAccent: true),
         ],
     );
   }
@@ -129,6 +156,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
       itemBuilder: (context, index) {
         final staff = _allStaff[index];
         final bool isOnline = _todayAttendance.any((a) => a['user_id'] == staff['id']);
+        if (isOnline) debugPrint('Staff ${staff['full_name']} is online');
+        
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),

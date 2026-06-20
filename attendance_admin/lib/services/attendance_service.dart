@@ -80,6 +80,7 @@ class AttendanceService with ChangeNotifier {
           .from('profiles')
           .select()
           .order('full_name');
+      debugPrint('Fetched ${response.length} staff members');
       return response;
     } catch (e) {
       debugPrint('Error fetching all staff: $e');
@@ -91,8 +92,9 @@ class AttendanceService with ChangeNotifier {
     try {
       final response = await SupabaseService.client
           .from('attendance')
-          .select('*, profiles(full_name)')
-          .order('check_in', ascending: false);
+          .select('*'); // Explicitly request all columns
+          
+      debugPrint('FETCH ATTEMPT: Records found: ${response.length}');
       return response;
     } catch (e) {
       debugPrint('Error fetching all attendance history: $e');
@@ -107,6 +109,7 @@ class AttendanceService with ChangeNotifier {
           .select()
           .eq('user_id', userId)
           .order('check_in', ascending: false);
+      debugPrint('Fetched ${response.length} records for staff ID: $userId');
       return response;
     } catch (e) {
       debugPrint('Error fetching staff attendance: $e');
@@ -157,6 +160,14 @@ class AttendanceService with ChangeNotifier {
     await SupabaseService.client.from('attendance').delete().eq('user_id', userId);
     // Then remove profile
     await SupabaseService.client.from('profiles').delete().eq('id', userId);
+  }
+
+  // Realtime Stream for attendance
+  Stream<List<Map<String, dynamic>>> get attendanceStream {
+    return _client
+        .from('attendance')
+        .stream(primaryKey: ['id'])
+        .order('check_in', ascending: false);
   }
 }
 
