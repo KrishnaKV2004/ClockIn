@@ -52,7 +52,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Database Error: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text('Database Error: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: const StadiumBorder(),
+            margin: const EdgeInsets.only(bottom: 10, left: 32, right: 32),
+          ),
         );
       }
     }
@@ -89,6 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SnackBar(
               content: Text('You are outside the office radius!'),
               backgroundColor: Colors.orangeAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: StadiumBorder(),
+              margin: EdgeInsets.only(bottom: 10, left: 32, right: 32),
             ),
           );
         }
@@ -106,7 +115,13 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
        if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: const StadiumBorder(),
+            margin: const EdgeInsets.only(bottom: 10, left: 32, right: 32),
+          ),
         );
       }
     } finally {

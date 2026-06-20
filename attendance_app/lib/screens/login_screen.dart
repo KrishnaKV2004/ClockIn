@@ -30,11 +30,22 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on AuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: const StadiumBorder(),
+          margin: const EdgeInsets.only(bottom: 10, left: 32, right: 32),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An unexpected error occurred')),
+        const SnackBar(
+          content: Text('An unexpected error occurred'),
+          behavior: SnackBarBehavior.floating,
+          shape: StadiumBorder(),
+          margin: EdgeInsets.only(bottom: 10, left: 32, right: 32),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
