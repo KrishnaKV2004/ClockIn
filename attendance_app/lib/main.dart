@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'services/supabase_service.dart';
 import 'services/attendance_service.dart';
+import 'services/profile_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -20,6 +21,7 @@ void main() async {
     MultiProvider(
       providers: [
         Provider<AttendanceService>(create: (_) => AttendanceService()),
+        Provider<ProfileService>(create: (_) => ProfileService()),
       ],
       child: const AttendanceApp(),
     ),

@@ -4,10 +4,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/attendance_service.dart';
+import '../services/profile_service.dart';
 import '../services/location_service.dart';
 import '../services/supabase_service.dart';
 import 'login_screen.dart';
 import 'history_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _todayAttendance;
+  String? _fullName;
   Position? _currentPosition;
   double _distanceToOffice = 0;
   bool _isLoading = true;
@@ -40,10 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadInitialData() async {
     try {
       final attendanceService = Provider.of<AttendanceService>(context, listen: false);
+      final profileService = Provider.of<ProfileService>(context, listen: false);
+      
       final data = await attendanceService.getTodayAttendance();
+      final profile = await profileService.getProfile();
+
       if (mounted) {
         setState(() {
           _todayAttendance = data;
+          _fullName = profile?['full_name'];
           _isLoading = false;
         });
       }
@@ -86,7 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isMarkingAttendance = true);
 
     try {
-      final pos = await LocationService.getCurrentLocation();
+      // Use shorter timeout for the check-in button to avoid long hangs
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      ).catchError((e) => throw 'Could not get location. Try again. ($e)');
+
       final isInside = LocationService.isWithinRadius(pos);
 
       if (!isInside) {
@@ -155,6 +170,15 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+            icon: const Icon(Icons.settings),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
                 MaterialPageRoute(builder: (_) => const HistoryScreen()),
               );
             },
@@ -198,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 18),
         ),
         Text(
-          user?.email?.split('@').first.toUpperCase() ?? 'Employee',
+          _fullName ?? user?.email?.split('@').first.toUpperCase() ?? 'Employee',
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
       ],
