@@ -32,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadInitialData();
     _startLocationTracking();
+    // Trigger permission request on startup
+    LocationService.getCurrentLocation().catchError((e) => debugPrint('Initial location request error: $e'));
   }
 
   @override
@@ -167,11 +169,12 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
+              _loadInitialData(); // Refresh data when coming back
             },
             icon: const Icon(Icons.settings),
           ),
