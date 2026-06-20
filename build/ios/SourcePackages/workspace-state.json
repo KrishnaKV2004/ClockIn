@@ -9,12 +9,12 @@
         "packageRef" : {
           "identity" : "flutterframework",
           "kind" : "fileSystem",
-          "location" : "/Users/mac/MacBook/Zurich/Moon Arc/attendance_app/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework",
+          "location" : "/Users/mac/MacBook/Zurich/Moon Arc/attendance_admin/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework",
           "name" : "FlutterFramework"
         },
         "state" : {
           "name" : "fileSystem",
-          "path" : "/Users/mac/MacBook/Zurich/Moon Arc/attendance_app/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework"
+          "path" : "/Users/mac/MacBook/Zurich/Moon Arc/attendance_admin/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework"
         },
         "subpath" : "flutterframework"
       }
