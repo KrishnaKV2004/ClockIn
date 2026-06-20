@@ -3,9 +3,6 @@ import 'package:provider/provider.dart';
 import '../services/attendance_service.dart';
 import 'staff_detail_screen.dart';
 import '../utils/smooth_transitions.dart';
-import '../services/notification_service.dart';
-import '../services/supabase_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -18,64 +15,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
   List<dynamic> _allStaff = [];
   List<dynamic> _todayAttendance = [];
   bool _isLoading = true;
-  RealtimeChannel? _attendanceChannel;
 
   @override
   void initState() {
     super.initState();
-    NotificationService.initialize();
     _loadData();
-    _setupRealtime();
-  }
-
-  @override
-  void dispose() {
-    if (_attendanceChannel != null) {
-      SupabaseService.client.removeChannel(_attendanceChannel!);
-    }
-    super.dispose();
-  }
-
-  void _setupRealtime() {
-    _attendanceChannel = SupabaseService.client
-        .channel('attendance_changes')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'attendance',
-          callback: (payload) {
-            _handleRealtimePayload(payload);
-          },
-        )
-        .subscribe();
-  }
-
-  void _handleRealtimePayload(PostgresChangePayload payload) async {
-    // Refresh the dashboard data
-    await _loadData();
-
-    final data = payload.newRecord;
-    if (data.isEmpty) return;
-
-    final userId = data['user_id'];
-    final staffMember = _allStaff.firstWhere((s) => s['id'] == userId, orElse: () => null);
-    final name = staffMember?['full_name'] ?? 'An employee';
-
-    if (payload.eventType == PostgresChangeEvent.insert) {
-      NotificationService.showNotification(
-        id: DateTime.now().millisecond,
-        title: 'New Check-In',
-        body: '$name has just arrived at the office.',
-      );
-    } else if (payload.eventType == PostgresChangeEvent.update) {
-      if (data['check_out'] != null) {
-        NotificationService.showNotification(
-          id: DateTime.now().millisecond,
-          title: 'Shift Completed',
-          body: '$name has just checked out.',
-        );
-      }
-    }
   }
 
   Future<void> _loadData() async {
