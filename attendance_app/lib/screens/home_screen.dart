@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    
+
     _loadInitialData();
     _startLocationTracking();
     LocationService.getCurrentLocation().catchError((e) => debugPrint('Initial location request error: $e'));
@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     try {
       final attendanceService = Provider.of<AttendanceService>(context, listen: false);
       final profileService = Provider.of<ProfileService>(context, listen: false);
-      
+
       final data = await attendanceService.getTodayAttendance();
       final profile = await profileService.getProfile();
 
@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     bool isCheckedIn = _todayAttendance != null && _todayAttendance!['check_out'] == null;
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 _buildFingerprintButton(isCheckedIn),
                 const SizedBox(height: 48),
                 const Text(
-                  'ClockIn',
+                  'Moon Arc Creations',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
@@ -276,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
             ),
-          
+
           AnimatedContainer(
             duration: const Duration(milliseconds: 500),
             width: 200,
@@ -322,10 +322,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildStatusCards() {
-    String checkInTime = _todayAttendance != null 
+    String checkInTime = _todayAttendance != null
         ? DateFormat('hh:mm a').format(DateTime.parse(_todayAttendance!['check_in']))
         : '--:--';
-        
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Row(
