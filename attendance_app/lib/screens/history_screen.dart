@@ -18,7 +18,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('HISTORY', style: TextStyle(letterSpacing: 4, fontSize: 14, fontWeight: FontWeight.w900)),
+        title: const Text('History and Logs', style: TextStyle(letterSpacing: 0, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
       body: FutureBuilder<List<dynamic>>(
         future: attendanceService.getAttendanceHistory(),

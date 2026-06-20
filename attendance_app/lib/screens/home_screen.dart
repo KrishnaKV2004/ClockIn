@@ -167,14 +167,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             icon: const Icon(Icons.analytics_outlined, size: 22),
           ),
         ),
-        title: const Text('MOON ARC', style: TextStyle(letterSpacing: 4, fontSize: 14, fontWeight: FontWeight.w900)),
+        title: const Icon(Icons.blur_on_rounded, color: Colors.black, size: 24),
         actions: [
           IconButton(
             onPressed: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
               _loadInitialData();
             },
-            icon: const Icon(Icons.tune_rounded, size: 22),
+            icon: const Icon(Icons.person_outline_rounded, size: 22, color: Colors.black),
           ),
           const SizedBox(width: 16),
         ],
@@ -183,10 +183,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ? const Center(child: CircularProgressIndicator(color: Colors.black))
           : Column(
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
                 _buildProfileHeader(),
+                const SizedBox(height: 24),
+                _buildClockArea(),
                 const Spacer(),
                 _buildFingerprintButton(isCheckedIn),
+                const SizedBox(height: 48),
+                const Text(
+                  'Moon Arc Creations',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    letterSpacing: 2,
+                  ),
+                ),
                 const Spacer(),
                 _buildStatusCards(),
                 const SizedBox(height: 60),
@@ -195,20 +207,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildClockArea() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.access_time_filled_rounded, size: 14, color: Colors.black45),
+          const SizedBox(width: 8),
+          Text(
+            DateFormat('hh:mm a').format(DateTime.now()),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1, color: Colors.black87),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfileHeader() {
-    String firstName = _fullName?.split(' ')[0] ?? 'Explorer';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
         children: [
-          Text(
-            'HELLO, ${firstName.toUpperCase()}',
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.black38),
-          ),
-          const SizedBox(height: 8),
           const Text(
-            'Ready for Duty?',
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black, letterSpacing: -1),
+            'WELCOME BACK',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 3, color: Colors.black26),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _fullName?.toUpperCase() ?? 'EXPLORER',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
         ],
       ),
@@ -263,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        isCheckedIn ? 'ACTIVE' : 'START',
+                        isCheckedIn ? 'CHECK OUT' : 'CHECK IN',
                         style: TextStyle(
                           color: isCheckedIn ? Colors.black26 : Colors.white70,
                           fontSize: 10,
