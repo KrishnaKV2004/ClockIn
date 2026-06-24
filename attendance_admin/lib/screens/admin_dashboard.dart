@@ -37,8 +37,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
       if (mounted) {
         debugPrint('REALTIME: Received ${data.length} records');
         setState(() {
-          // Update online status from stream
-          _todayAttendance = data.where((record) => record['check_out'] == null).toList();
+          // Update online status from stream, ignoring old forgotten sessions (>24 hours)
+          _todayAttendance = data.where((record) {
+            if (record['check_out'] != null) return false;
+            final checkInStr = record['check_in'];
+            if (checkInStr == null) return false;
+            try {
+              final checkInTime = DateTime.parse(checkInStr);
+              final diff = DateTime.now().difference(checkInTime);
+              return diff.inHours < 24;
+            } catch (e) {
+              return false;
+            }
+          }).toList();
           debugPrint('REALTIME: Active sessions: ${_todayAttendance.length}');
         });
       }
@@ -57,9 +68,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
       debugPrint('Record: User: ${rec['user_id']}, CheckOut: ${rec['check_out']}');
     }
 
-    // Simple logic: If check_out is null, the person is active/online.
+    // Simple logic: If check_out is null and check_in is within the last 24 hours, the person is active/online.
     final today = allHistory.where((record) {
-      return record['check_out'] == null;
+      if (record['check_out'] != null) return false;
+      final checkInStr = record['check_in'];
+      if (checkInStr == null) return false;
+      try {
+        final checkInTime = DateTime.parse(checkInStr);
+        final diff = DateTime.now().difference(checkInTime);
+        return diff.inHours < 24;
+      } catch (e) {
+        return false;
+      }
     }).toList();
     
     debugPrint('Filtering found ${today.length} active sessions');

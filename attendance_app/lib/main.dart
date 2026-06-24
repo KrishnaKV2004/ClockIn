@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_service.dart';
 import 'services/attendance_service.dart';
 import 'services/profile_service.dart';
@@ -63,17 +65,47 @@ class AttendanceApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final session = SupabaseService.client.auth.currentSession;
-    
-    if (session == null) {
-      return const LoginScreen();
-    } else {
-      return const HomeScreen();
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  // On web, Supabase restores the session asynchronously.
+  // We start as "loading" and resolve once the first auth event fires.
+  bool _isLoading = kIsWeb;
+  Session? _session;
+
+  @override
+  void initState() {
+    super.initState();
+    // Read any already-restored session immediately
+    _session = SupabaseService.client.auth.currentSession;
+
+    SupabaseService.client.auth.onAuthStateChange.listen((data) {
+      if (!mounted) return;
+      setState(() {
+        _session = data.session;
+        _isLoading = false;
+      });
+    });
+
+    // Fallback: if not on web, stop loading immediately
+    if (!kIsWeb) {
+      _isLoading = false;
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator(color: Colors.black)),
+      );
+    }
+    return _session == null ? const LoginScreen() : const HomeScreen();
   }
 }

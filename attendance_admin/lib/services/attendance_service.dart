@@ -88,8 +88,51 @@ class AttendanceService with ChangeNotifier {
     }
   }
 
+  Future<void> _closePreviousCheckIns() async {
+    try {
+      final openRecords = await _client
+          .from('attendance')
+          .select()
+          .isFilter('check_out', null);
+
+      if (openRecords.isNotEmpty) {
+        final now = DateTime.now();
+        for (var record in openRecords) {
+          final checkInStr = record['check_in'];
+          if (checkInStr == null) continue;
+          final checkInTime = DateTime.parse(checkInStr).toLocal();
+          
+          // Check if check-in was on a previous day
+          if (checkInTime.year < now.year ||
+              (checkInTime.year == now.year && checkInTime.month < now.month) ||
+              (checkInTime.year == now.year && checkInTime.month == now.month && checkInTime.day < now.day)) {
+            
+            DateTime checkOutTime = DateTime(
+              checkInTime.year,
+              checkInTime.month,
+              checkInTime.day,
+              22,
+              0,
+              0,
+            );
+            if (checkOutTime.isBefore(checkInTime)) {
+              checkOutTime = checkInTime.add(const Duration(minutes: 5));
+            }
+
+            await _client.from('attendance').update({
+              'check_out': checkOutTime.toIso8601String(),
+            }).eq('id', record['id']);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error auto-closing old check-ins: $e');
+    }
+  }
+
   Future<List<dynamic>> getAllAttendanceHistory() async {
     try {
+      await _closePreviousCheckIns();
       final response = await SupabaseService.client
           .from('attendance')
           .select('*'); // Explicitly request all columns
@@ -104,6 +147,7 @@ class AttendanceService with ChangeNotifier {
 
   Future<List<dynamic>> getStaffAttendance(String userId) async {
     try {
+      await _closePreviousCheckIns();
       final response = await SupabaseService.client
           .from('attendance')
           .select()

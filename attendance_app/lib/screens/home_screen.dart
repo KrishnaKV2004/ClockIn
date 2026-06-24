@@ -80,9 +80,38 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             _currentPosition = pos;
             _distanceToOffice = LocationService.getDistanceFromOffice(pos);
           });
+
+          // Self checkout based on location
+          final isCheckedIn = _todayAttendance != null && _todayAttendance!['check_out'] == null;
+          if (isCheckedIn) {
+            final isInside = LocationService.isWithinRadius(pos);
+            if (!isInside) {
+              debugPrint('Self checkout triggered: User left office radius.');
+              final attendanceService = Provider.of<AttendanceService>(context, listen: false);
+              try {
+                await attendanceService.checkOut();
+                await _loadInitialData();
+              } catch (checkoutErr) {
+                debugPrint('Error during location self checkout: $checkoutErr');
+              }
+            }
+          }
         }
       } catch (e) {
         debugPrint('Location Error: $e');
+        // If location is disabled by chance after 10pm it should checkout
+        final isCheckedIn = _todayAttendance != null && _todayAttendance!['check_out'] == null;
+        final now = DateTime.now();
+        if (isCheckedIn && now.hour >= 22) {
+          debugPrint('Self checkout triggered: Location disabled after 10 PM');
+          final attendanceService = Provider.of<AttendanceService>(context, listen: false);
+          try {
+            await attendanceService.checkOut();
+            await _loadInitialData();
+          } catch (checkoutErr) {
+            debugPrint('Error auto checking out after 10 PM: $checkoutErr');
+          }
+        }
       }
     });
   }
