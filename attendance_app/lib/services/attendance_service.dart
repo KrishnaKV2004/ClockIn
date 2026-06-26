@@ -20,13 +20,12 @@ class AttendanceService {
           if (checkInStr == null) continue;
           final checkInTime = DateTime.parse(checkInStr).toLocal();
           
-          DateTime checkOutTime;
           // Check if check-in was on a previous day
           if (checkInTime.year < now.year ||
               (checkInTime.year == now.year && checkInTime.month < now.month) ||
               (checkInTime.year == now.year && checkInTime.month == now.month && checkInTime.day < now.day)) {
             // Set to 10 PM of that check-in day
-            checkOutTime = DateTime(
+            DateTime checkOutTime = DateTime(
               checkInTime.year,
               checkInTime.month,
               checkInTime.day,
@@ -37,14 +36,11 @@ class AttendanceService {
             if (checkOutTime.isBefore(checkInTime)) {
               checkOutTime = checkInTime.add(const Duration(minutes: 5));
             }
-          } else {
-            // It is today, close it with current time
-            checkOutTime = now;
-          }
 
-          await _client.from('attendance').update({
-            'check_out': checkOutTime.toIso8601String(),
-          }).eq('id', record['id']);
+            await _client.from('attendance').update({
+              'check_out': checkOutTime.toIso8601String(),
+            }).eq('id', record['id']);
+          }
         }
       }
     } catch (e) {
