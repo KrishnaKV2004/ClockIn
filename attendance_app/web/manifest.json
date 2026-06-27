@@ -1,11 +1,11 @@
 {
-    "name": "Moon Attendance",
-    "short_name": "Moon Attendance",
+    "name": "ClockIn",
+    "short_name": "ClockIn",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#000000",
-    "description": "Moon Arc Creations Employee Monitoring Portal",
+    "description": "ClockIn - Employee Attendance & Monitoring Portal",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
