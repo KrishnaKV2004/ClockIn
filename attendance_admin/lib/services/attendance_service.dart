@@ -205,11 +205,11 @@ class AttendanceService with ChangeNotifier {
       if (user == null) throw Exception('Failed to create user');
 
       // 3. Insert into profiles table
-      await _client.from('profiles').upsert({
+      await tempClient.from('profiles').upsert({
         'id': user.id,
         'full_name': name,
         'updated_at': DateTime.now().toIso8601String(),
-      });
+      }, onConflict: 'id');
 
       notifyListeners();
     } catch (e) {

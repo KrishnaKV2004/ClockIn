@@ -13,7 +13,7 @@ class ProfileService {
         .select()
         .eq('id', user.id)
         .maybeSingle();
-    
+
     return response;
   }
 
@@ -25,7 +25,7 @@ class ProfileService {
       'id': user.id,
       'full_name': fullName,
       'updated_at': DateTime.now().toIso8601String(),
-    });
+    }, onConflict: 'id');
   }
 
   Future<void> updateEmail(String newEmail) async {
