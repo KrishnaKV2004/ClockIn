@@ -65,10 +65,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final service = Provider.of<AttendanceService>(context, listen: false);
-    
+
     final staff = await service.getAllStaff();
     final allHistory = await service.getAllAttendanceHistory();
-    
+
     debugPrint('All History Count: ${allHistory.length}');
     for (var rec in allHistory) {
       debugPrint('Record: User: ${rec['user_id']}, CheckOut: ${rec['check_out']}');
@@ -87,7 +87,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return false;
       }
     }).toList();
-    
+
     debugPrint('Filtering found ${today.length} active sessions');
 
     setState(() {
@@ -164,12 +164,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
       }
 
       final csvBuffer = StringBuffer();
-      
+
       // --- Section 1: Monthly Summary ---
       final monthName = DateFormat('MMMM yyyy').format(nowTime);
       csvBuffer.writeln('MONTHLY ATTENDANCE SUMMARY ($monthName)');
       csvBuffer.writeln('Employee Name,Employee ID,Working Days (Current Month),Total Hours (Current Month)');
-      
+
       for (var s in staff) {
         final id = s['id'].toString();
         final name = s['full_name']?.toString() ?? 'Unknown';
@@ -194,12 +194,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final id = record['id']?.toString() ?? '';
         final userId = record['user_id']?.toString() ?? '';
         final employeeName = staffMap[userId] ?? 'Unknown Employee';
-        
-        final checkInStr = record['check_in'] != null 
-            ? DateTime.parse(record['check_in']).toLocal().toString() 
+
+        final checkInStr = record['check_in'] != null
+            ? DateTime.parse(record['check_in']).toLocal().toString()
             : '';
-        final checkOutStr = record['check_out'] != null 
-            ? DateTime.parse(record['check_out']).toLocal().toString() 
+        final checkOutStr = record['check_out'] != null
+            ? DateTime.parse(record['check_out']).toLocal().toString()
             : 'LIVE';
 
         // Calculate hours
@@ -212,7 +212,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           final diff = end.difference(start).inSeconds;
           hours = (diff < 0 ? 0 : diff) / 3600.0;
         }
-        
+
         final status = record['check_out'] != null ? 'Completed' : 'Active';
 
         csvBuffer.writeln([
@@ -299,44 +299,68 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Admin Console'),
-        actions: [
-          IconButton(
-            onPressed: _exportLogsToCSV,
-            icon: const Icon(Icons.file_download_outlined, size: 24),
-            tooltip: 'Export CSV',
-          ),
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh_rounded, size: 24),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.black))
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              color: Colors.black,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildStatsRow(),
-                    const SizedBox(height: 48),
-                    const Text(
-                      'Staff Roster',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black26, letterSpacing: 2),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStaffList(),
-                  ],
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.black))
+            : RefreshIndicator(
+                onRefresh: _loadData,
+                color: Colors.black,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: Theme.of(context).platform == TargetPlatform.iOS ? 50.0 : 60.0,
+                            bottom: Theme.of(context).platform == TargetPlatform.iOS ? 90.0 : 90.0,
+                          ),
+                          child: Text(
+                            'Admin',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildActionRow(
+                        title: 'Add Member',
+                        subtitle: 'Create a new staff profile',
+                        icon: Icons.person_add_alt_1_rounded,
+                        onTap: _showAddMemberDialog,
+                      ),
+                      _buildActionRow(
+                        title: 'Remove Member',
+                        subtitle: 'Delete a staff profile',
+                        icon: Icons.person_remove_rounded,
+                        onTap: _showRemoveMemberBottomSheet,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildStatsRow(),
+                      const SizedBox(height: 24),
+                      _buildActionRow(
+                        title: 'Export Report',
+                        subtitle: 'Download monthly CSV logs',
+                        icon: Icons.file_download_outlined,
+                        onTap: _exportLogsToCSV,
+                        isAccent: true,
+                      ),
+                      const SizedBox(height: 36),
+                      const Text(
+                        'Staff Roster',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black26, letterSpacing: 2),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildStaffList(),
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -386,11 +410,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final staff = _allStaff[index];
         final bool isOnline = _todayAttendance.any((a) => a['user_id'] == staff['id']);
         if (isOnline) debugPrint('Staff ${staff['full_name']} is online');
-        
+
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(24),
@@ -420,6 +444,447 @@ class _AdminDashboardState extends State<AdminDashboard> {
               SmoothPageRoute(child: StaffDetailScreen(staff: staff)),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionRow({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isAccent = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(left: 20, right:20, top:10, bottom: 10),
+      decoration: BoxDecoration(
+        color: isAccent ? Colors.black : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isAccent ? Colors.black : Colors.black.withValues(alpha: 0.03)),
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: isAccent ? Colors.white.withValues(alpha: 0.1) : Colors.black,
+          child: Icon(
+            icon,
+            color: isAccent ? Colors.white : Colors.white,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isAccent ? Colors.white : Colors.black,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            color: isAccent ? Colors.white38 : Colors.black26,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 12,
+          color: isAccent ? Colors.white38 : Colors.black26,
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  void _showAddMemberDialog() {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Center(
+                          child: Text(
+                            'Add Member',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: TextFormField(
+                            controller: nameController,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Full Name',
+                              hintStyle: TextStyle(color: Colors.black26, fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                            validator: (val) => val == null || val.trim().isEmpty ? 'Name is required' : null,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: TextFormField(
+                            controller: emailController,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Email Address',
+                              hintStyle: TextStyle(color: Colors.black26, fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Email is required';
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val.trim())) {
+                                return 'Enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: TextFormField(
+                            controller: passwordController,
+                            obscureText: true,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Password (min 6 chars)',
+                              hintStyle: TextStyle(color: Colors.black26, fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                            validator: (val) {
+                              if (val == null || val.isEmpty) return 'Password is required';
+                              if (val.length < 6) return 'Password must be at least 6 characters';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: isSaving ? null : () => Navigator.pop(context),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.black26, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            ElevatedButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      if (formKey.currentState!.validate()) {
+                                        setDialogState(() => isSaving = true);
+                                        try {
+                                          final service = Provider.of<AttendanceService>(context, listen: false);
+                                          await service.addStaff(
+                                            nameController.text.trim(),
+                                            emailController.text.trim(),
+                                            passwordController.text,
+                                          );
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: const Text('Member added successfully', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                                backgroundColor: Colors.black,
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                margin: const EdgeInsets.all(24),
+                                              ),
+                                            );
+                                            _loadData();
+                                          }
+                                        } catch (e) {
+                                          setDialogState(() => isSaving = false);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Error adding member: $e', style: const TextStyle(color: Colors.white)),
+                                                backgroundColor: Colors.redAccent,
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                margin: const EdgeInsets.all(24),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              ),
+                              child: isSaving
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    )
+                                  : const Text('Add Member', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showRemoveMemberBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return StatefulBuilder(
+              builder: (context, setSheetState) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Container(
+                          width: 48,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Center(
+                        child: Text(
+                          'Remove Member',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          'Select a profile to permanently delete',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black26,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Expanded(
+                        child: _allStaff.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No staff members found.',
+                                  style: TextStyle(color: Colors.black26, fontWeight: FontWeight.bold),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                itemCount: _allStaff.length,
+                                itemBuilder: (context, index) {
+                                  final staff = _allStaff[index];
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8FAFC),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 22,
+                                          backgroundColor: Colors.black.withValues(alpha: 0.05),
+                                          child: Text(
+                                            (staff['full_name'] ?? '?')[0].toUpperCase(),
+                                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Text(
+                                            staff['full_name'] ?? 'Employee',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          height: 40,
+                                          width: 40,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFFEE2E2),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: IconButton(
+                                            padding: EdgeInsets.zero,
+                                            icon: const Icon(
+                                              Icons.delete_outline_rounded,
+                                              color: Colors.redAccent,
+                                              size: 20,
+                                            ),
+                                            onPressed: () => _confirmRemoveMember(staff),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmRemoveMember(dynamic staff) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        bool isDeleting = false;
+        return StatefulBuilder(
+          builder: (context, setConfirmState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Text('Remove Member?', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Text('Are you sure you want to remove ${staff['full_name'] ?? 'this member'}? This action is permanent and will delete all their attendance records.'),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.black26, fontWeight: FontWeight.bold)),
+                ),
+                TextButton(
+                  onPressed: isDeleting
+                      ? null
+                      : () async {
+                          setConfirmState(() => isDeleting = true);
+                          try {
+                            final service = Provider.of<AttendanceService>(context, listen: false);
+                            await service.removeStaff(staff['id']);
+                            if (context.mounted) {
+                              Navigator.pop(context); // Close confirmation dialog
+                              Navigator.pop(context); // Close main remove bottom sheet
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Member removed successfully', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  backgroundColor: Colors.black,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  margin: const EdgeInsets.all(24),
+                                ),
+                              );
+                              _loadData();
+                            }
+                          } catch (e) {
+                            setConfirmState(() => isDeleting = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error removing member: $e', style: const TextStyle(color: Colors.white)),
+                                  backgroundColor: Colors.redAccent,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  margin: const EdgeInsets.all(24),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: isDeleting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(color: Colors.redAccent, strokeWidth: 2),
+                        )
+                      : const Text('Remove', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -97,16 +97,17 @@ class AttendanceService with ChangeNotifier {
 
       if (openRecords.isNotEmpty) {
         final now = DateTime.now();
+        final List<Future> updates = [];
         for (var record in openRecords) {
           final checkInStr = record['check_in'];
           if (checkInStr == null) continue;
           final checkInTime = DateTime.parse(checkInStr).toLocal();
-          
+
           // Check if check-in was on a previous day
           if (checkInTime.year < now.year ||
               (checkInTime.year == now.year && checkInTime.month < now.month) ||
               (checkInTime.year == now.year && checkInTime.month == now.month && checkInTime.day < now.day)) {
-            
+
             DateTime checkOutTime = DateTime(
               checkInTime.year,
               checkInTime.month,
@@ -119,10 +120,17 @@ class AttendanceService with ChangeNotifier {
               checkOutTime = checkInTime.add(const Duration(minutes: 5));
             }
 
-            await _client.from('attendance').update({
-              'check_out': checkOutTime.toIso8601String(),
-            }).eq('id', record['id']);
+            updates.add(
+              _client.from('attendance').update({
+                'check_out': checkOutTime.toIso8601String(),
+              }).eq('id', record['id']).then((_) {}, onError: (e) {
+                debugPrint('Error auto-closing record ${record['id']}: $e');
+              }),
+            );
           }
+        }
+        if (updates.isNotEmpty) {
+          await Future.wait(updates).timeout(const Duration(seconds: 5));
         }
       }
     } catch (e) {
@@ -132,12 +140,21 @@ class AttendanceService with ChangeNotifier {
 
   Future<List<dynamic>> getAllAttendanceHistory() async {
     try {
-      await _closePreviousCheckIns();
+      // Fire-and-forget: run auto-closing in the background without blocking the UI
+      _closePreviousCheckIns();
+
+      // Optimize: Only fetch records within the last 30 days or the current month
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+      final limitDate = startOfMonth.isBefore(thirtyDaysAgo) ? startOfMonth : thirtyDaysAgo;
+
       final response = await SupabaseService.client
           .from('attendance')
-          .select('*'); // Explicitly request all columns
-          
-      debugPrint('FETCH ATTEMPT: Records found: ${response.length}');
+          .select('*')
+          .gte('check_in', limitDate.toIso8601String());
+
+      debugPrint('FETCH ATTEMPT: Optimized records found: ${response.length}');
       return response;
     } catch (e) {
       debugPrint('Error fetching all attendance history: $e');
@@ -147,7 +164,9 @@ class AttendanceService with ChangeNotifier {
 
   Future<List<dynamic>> getStaffAttendance(String userId) async {
     try {
-      await _closePreviousCheckIns();
+      // Fire-and-forget: run auto-closing in the background without blocking the UI
+      _closePreviousCheckIns();
+
       final response = await SupabaseService.client
           .from('attendance')
           .select()
@@ -172,7 +191,7 @@ class AttendanceService with ChangeNotifier {
           pkceAsyncStorage: _NoopStorage(),
         ),
       );
-      
+
       // 2. Sign up the user
       final AuthResponse res = await tempClient.auth.signUp(
         email: email,
@@ -191,7 +210,7 @@ class AttendanceService with ChangeNotifier {
         'full_name': name,
         'updated_at': DateTime.now().toIso8601String(),
       });
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error adding staff: $e');
